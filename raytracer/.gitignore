@@ -1,0 +1,8 @@
+renders/
+build/
+.vscode/
+
+*.o
+*.log
+
+renderer
