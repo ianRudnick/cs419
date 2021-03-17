@@ -7,6 +7,7 @@
 #ifndef RUDNICKRT_SPHERE_H
 #define RUDNICKRT_SPHERE_H
 
+#include "aabb.h"
 #include "hittable.h"
 #include "material.h"
 #include "ray.h"
@@ -23,6 +24,8 @@ public: // Functions
     virtual bool hit(
         const Ray & ray, double tmin, double tmax, hit_record & record
     ) const override;
+
+    virtual bool boundingBox(AABB& output) const override;
 
 public: // Data members
     Point3 center_;

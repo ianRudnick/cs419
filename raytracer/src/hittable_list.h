@@ -26,6 +26,8 @@ public:
     virtual bool hit(const Ray & ray,
                      double tmin, double tmax, 
                      hit_record & record) const override;
+    
+    virtual bool boundingBox(AABB& output) const override;
 
 public:
     std::vector<std::shared_ptr<Hittable>> objects_;

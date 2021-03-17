@@ -7,6 +7,7 @@
 #ifndef RUDNICKRT_HITTABLE_H
 #define RUDNICKRT_HITTABLE_H
 
+#include "aabb.h"
 #include "material.h"
 #include "ray.h"
 #include "vec3.h"
@@ -46,6 +47,7 @@ public:
         const Ray &ray, double tmin, double tmax, hit_record &record
     ) const = 0;
 
+    virtual bool boundingBox(AABB& output) const = 0;
 };
 
 } // namespace rudnick_rt

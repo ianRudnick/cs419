@@ -7,12 +7,13 @@
 #include <cmath>
 #include "sphere.h"
 
+#include "aabb.h"
+
 namespace rudnick_rt {
 
 bool Sphere::hit(
     const Ray & ray, double tmin, double tmax, hit_record & record
 ) const {
-
     Vec3 oc = ray.origin() - center_;
     auto a = ray.direction().lengthSquared();
     auto half_b = Vec3::dot(oc, ray.direction());
@@ -38,6 +39,14 @@ bool Sphere::hit(
     record.setNormalDirection(ray, surface_normal);
     
     // The ray does hit
+    return true;
+}
+
+bool Sphere::boundingBox(AABB& output) const {
+    output = AABB(
+        this->center_ - Vec3(this->radius_, this->radius_, this->radius_),
+        this->center_ + Vec3(this->radius_, this->radius_, this->radius_)
+    );
     return true;
 }
     
