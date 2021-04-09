@@ -37,53 +37,57 @@ typedef struct {
 /**
  * Non-recursive helper function to trace a ray and determine what color it
  * hits.
- * The API here looks a little weird, because I built the recursive version
- * of the function first according to Peter Shirley's book. And I didn't want
- * to implement an extra function to get the albedo of a material.
  * @param ray The ray to trace.
  * @param background The background color.
  * @param world The scene to render and check for ray intersections.
  * @return The RGBColor to use to color the pixel.
  */
-RGBColor traceRay(const Ray & ray, const RGBColor & background,
+RGBColor traceRayPhong(const Ray & ray, const RGBColor & background,
                   const Hittable & world) {
     // Put a point light source at (8, 8, 8)
-    Point3 light_source(3, 8, 8);
+    Point3 light_source(7, 10, 4);
     // Record what the ray hits
     hit_record record;
-    // Diffuse constant
-    double k_diffuse = 1.2;
-    // Ambient light amount
-    RGBColor ambient(1.0, 0.9, 0.6);
-    // Ambient constant
-    double k_ambient = 0.4;
-
+    
     // If the ray hit something, do basic diffuse lighting
     if (world.hit(ray, 0.001, infinity, record)) {
-        RGBColor ambient_color;
+        // Get the color of the object we hit
+        RGBColor object_color;
         Ray scattered;
-        record.material->scatter(ray, record, ambient_color, scattered);
+        record.material->scatter(ray, record, object_color, scattered);
+
+        // Ambient weighting is constant.
+        auto ambient_weight = 0.1;
         
-        Vec3 light_direction = light_source - record.point;
-        auto light_angle = Vec3::dot(Vec3::normalize(light_direction),
+        // Compute the weighting for diffuse light component.
+        Vec3 L = light_source - record.point;
+        auto light_angle = Vec3::dot(Vec3::normalize(L),
                                      Vec3::normalize(record.normal));
+        auto diffuse_weight = std::max(light_angle, 0.0);
+
+        // Compute the weighting for specular light component.
+        Vec3 R = Vec3::reflect(L, record.normal);
+        auto reflect_angle = Vec3::dot(Vec3::normalize(R),
+                                       Vec3::normalize(ray.direction()));
+        auto a = 3.0;
+        auto specular_weight = std::max(pow(reflect_angle, a), 0.0);
         
-        // If there's something blocking the light, make a hard shadow
-        Ray shadow_ray = Ray(record.point, light_direction);
-        RGBColor diffuse_color = ambient_color;
-        auto distance_to_light = light_direction.length();
-        if (world.hit(shadow_ray, 0.001, distance_to_light, record)) {
-            diffuse_color *= 0.3;
-        }
+        // // If there's something blocking the light, make a hard shadow
+        // Ray shadow_ray = Ray(record.point, L);
+        // auto distance_to_light = L.length();
+        // if (world.hit(shadow_ray, 0.001, distance_to_light, record)) {
+        //     diffuse_weight *= 0.3;
+        // }
         
-        return (k_ambient * ambient_color * ambient) +
-            (k_diffuse * light_angle * diffuse_color);
+        return (object_color * ambient_weight)
+            + (object_color * diffuse_weight)
+            + (object_color * specular_weight);
     }
 
     // If the ray did not hit anything, color the sky a gradient
     Vec3 direction_normal = Vec3::normalize(ray.direction());
     auto t = 0.5 * (direction_normal.y() + 1.0);
-    return (1.0-t) * RGBColor(1.0, 1.0, 1.0) + t * RGBColor(0.4, 0.6, 1.0);
+    return (1.0-t) * RGBColor(1.0, 0.9, 0.8) + t * RGBColor(0.4, 0.6, 1.0);
 }
 
 
@@ -119,7 +123,7 @@ RGBColor traceRayRecursive(const Ray & ray, const Hittable & world, int depth) {
     // If the ray did not hit anything, color the sky a gradient
     Vec3 direction_normal = Vec3::normalize(ray.direction());
     auto t = 0.5 * (direction_normal.y() + 1.0);
-    return (1.0-t) * RGBColor(1.0, 1.0, 1.0) + t * RGBColor(0.4, 0.6, 1.0);
+    return (1.0-t) * RGBColor(0.8, 0.9, 1.0) + t * RGBColor(0.4, 0.6, 1.0);
 }
 
 
@@ -162,7 +166,7 @@ RGBColor traceRayRecursive(const Ray & ray, const RGBColor & background,
  * @param cols number of columns
  * @param rows number of rows
  */
-void multiJitter(Point2 p[], unsigned cols, unsigned rows) {
+void multiJitter(Point2 p[], int cols, int rows) {
     auto subcell_width = 1.0 / (cols * rows);
 
     // Initialize the array to the canonical multi-jittered pattern.
@@ -214,21 +218,22 @@ int main() {
     std::cout << "Rendering " << render_name << ".png" << std::endl;
 
     // Set up image
-    const auto aspect_ratio = 16.0 / 9.0;
-    const unsigned int image_width = 640;
-    const unsigned int image_height = 
-        static_cast<unsigned int>(image_width / aspect_ratio);
-    const unsigned int samples_per_pixel = 64;  // MUST BE A SQUARE NUMBER
-    const int max_depth = 50;
+    const auto aspect_ratio = 16.0/9.0;
+    const int image_width = 1280;
+    const int image_height = static_cast<int>(image_width / aspect_ratio);
+    const int samples_per_pixel = 400;  // MUST BE A SQUARE NUMBER
+    const int max_depth = 100;
     PNG *render = new PNG(image_width, image_height);
-    RGBColor background(0, 0, 0);
+    RGBColor background(0.2, 0.8, 1.0);
 
     // Set up world
-    HittableList world = basicScene();
+    // 1000 spheres = 32, 10,000 = 50, 100,000 = 159
+    HittableList world = areaLight();
 
     // Set up camera
-    Point3 camera_pos = Point3(12, 2, 5);
-    Point3 lookat = Point3(0, 1, -0.4);
+    //Point3 camera_pos = Point3(-8, 15, -5);
+    Point3 camera_pos = Point3(-8, 8, -8);
+    Point3 lookat = Point3(0.5, 0.5, 0);
     Vec3 up(0, 1, 0);
     auto fov = 20.0;
     auto focal_distance = 10.0;
@@ -237,20 +242,20 @@ int main() {
     
     Camera cam(camera_pos, lookat, up, fov, aspect_ratio, aperture, focal_distance);
 
+    // Set up a multi-jitter sample pattern
+    auto sample_pattern_rows = std::sqrt(samples_per_pixel);
+    Point2 sample_pattern[samples_per_pixel];
+    multiJitter(sample_pattern, sample_pattern_rows, sample_pattern_rows);
+
     // Render the image!
     // Loop over each row of pixels (scanline)
-    for (unsigned y = 0; y < image_height; ++y) {
+    for (int y = 0; y < image_height; ++y) {
         // Show the progress on the console
         std::cout << "\rScanlines remaining: " << image_height - y << ' ' << std::flush;
         
         // For each pixel in the row
         for (int x = 0; x < image_width; ++x) {
     
-            // Set up a multi-jitter sample pattern
-            auto sample_pattern_rows = std::sqrt(samples_per_pixel);
-            Point2 sample_pattern[samples_per_pixel];
-            multiJitter(sample_pattern, sample_pattern_rows, sample_pattern_rows);
-
             // Get the pixel color, with antialiasing
             RGBColor pixel_color(0, 0, 0);
             for (int s = 0; s < samples_per_pixel; ++s) {
@@ -258,18 +263,11 @@ int main() {
                 auto v = (y + sample_pattern[s].y) / (image_height - 1);
                 Ray ray = cam.getRay(u, v, projection);
                 // Accumulate the pixel color from samples
-                pixel_color += traceRay(ray, background, world);
+                //pixel_color += traceRayPhong(ray, background, world);
+                pixel_color += traceRayRecursive(ray, RGBColor(0, 0, 0), world, max_depth);
             }
             // Divide the accumulated color by the number of accumulations
             pixel_color = pixel_color / samples_per_pixel;
-
-            // // Get the pixel color, no antialiasing!
-            // RGBColor pixel_color(0, 0, 0);
-            // auto u = (x + 0.5) / (image_width - 1);
-            // auto v = (y + 0.5) / (image_height - 1);
-            // Ray ray = cam.getRay(u, v, projection);
-            // // Accumulate the pixel color from samples
-            // pixel_color += traceRay(ray, background, world);
 
             /**
              * Get the pixel in the PNG and set it to the right color.
@@ -277,7 +275,7 @@ int main() {
              * lower-left corner of the renderer's coordinates, so we have to
              * flip the y-coordinate
              */
-            RGBAPixel &pixel = render->getPixel(x, image_height - 1 - y);
+            RGBAPixel& pixel = render->getPixel(x, image_height - 1 - y);
             pixel.setColor(pixel_color);
         }
     }

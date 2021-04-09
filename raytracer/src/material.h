@@ -55,6 +55,47 @@ private:
 };
 
 
+class BasicMetal : public Material {
+public:
+    BasicMetal(const RGBColor & albedo, double f)
+        : albedo_(albedo), fuzziness_(f < 1 ? f : 1) {}
+
+    virtual bool scatter(const Ray & incident,
+                         const hit_record & record,
+                         RGBColor & attenuation,
+                         Ray & scattered) const override;
+
+private:
+    RGBColor albedo_;
+    double fuzziness_;
+};
+
+
+class BasicDielectric: public Material {
+public:
+    BasicDielectric(const RGBColor & albedo, double ri)
+        : albedo_(albedo), ri_(ri) {}
+
+    virtual bool scatter(const Ray & incident,
+                         const hit_record & record,
+                         RGBColor & attenuation,
+                         Ray & scattered) const override;
+
+private:
+    /**
+     * Computes Schlick's approximation for reflectance.
+     * Used to vary the amount of reflection inside a dielectric.
+     * @param cos Cosine of the angle between the incident and normal vectors.
+     * @param ri Refraction index of the dielectric object.
+     * @return The approximated reflectance at the given angle.
+     */
+    static double reflectance(double cos, double ri);
+
+    RGBColor albedo_;
+    double ri_;
+};
+
+
 class RGBColorLight: public Material {
 public:
     RGBColorLight(RGBColor color) : color_(color) {}
@@ -63,6 +104,7 @@ public:
                          const hit_record & record,
                          RGBColor & attenuation,
                          Ray & scattered) const override {
+        // this simple light source does not scatter any light rays that hit it
         return false;
     }
 

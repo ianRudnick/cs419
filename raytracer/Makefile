@@ -3,7 +3,7 @@
 
 CC=clang++
 WARNINGS = -pedantic -Wall -Werror -Wfatal-errors -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function
-CFLAGS=$(WARNINGS) -std=c++1y -stdlib=libc++ -O0 -g -c
+CFLAGS=$(WARNINGS) -std=c++1y -stdlib=libc++ -O3 -g -c
 
 TARGET_EXEC ?= main
 
@@ -17,7 +17,7 @@ DEPS := $(OBJS:.o=.d)
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
+CPPFLAGS ?= $(WARNINGS) $(INC_FLAGS) -Ofast -MMD -MP
 
 $(TARGET_EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)

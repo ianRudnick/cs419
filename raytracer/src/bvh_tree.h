@@ -4,11 +4,11 @@
  * Bounding Volume Hierarchy tree class for use in raytracing calculations.
  * Uses a class for the tree, and a nested class for the nodes.
  * 
- * Based on Peter Shirley's Implementation in Ray Tracing: The Next Week.
+ * Based on Peter Shirley's Implementation in Ray Tracing: The Next Week,
+ * and Physically Based Rendering.
  */
-
-#ifndef RUDNICKRT_BVHTREE_H
-#define RUDNICKRT_BVHTREE_H
+#ifndef RUDNICKRT_BVH_TREE_H
+#define RUDNICKRT_BVH_TREE_H
 
 #include <vector>
 
@@ -17,6 +17,7 @@
 #include "hittable_list.h"
 #include "ray.h"
 #include "utils.h"
+
 
 namespace rudnick_rt {
 
@@ -58,31 +59,6 @@ public:
          * @return True if successful.
          */
         virtual bool boundingBox(AABB& box) const override;
-
-        /**
-         * Compares the bounding boxes of two Hittables.
-         * @param a Pointer to the first Hittable.
-         * @param b Pointer to the second Hittable.
-         * @param int The axis to compare them on
-         * @return True if a < b
-         */
-        static bool compareBox(const shared_ptr<Hittable> a,
-                               const shared_ptr<Hittable> b, int axis);
-
-        static bool compareBoxX(const shared_ptr<Hittable> a,
-                                const shared_ptr<Hittable> b) {
-            return compareBox(a, b, 0);
-        }
-
-        static bool compareBoxY(const shared_ptr<Hittable> a,
-                                const shared_ptr<Hittable> b) {
-            return compareBox(a, b, 1);
-        }
-        
-        static bool compareBoxZ(const shared_ptr<Hittable> a,
-                                const shared_ptr<Hittable> b) {
-            return compareBox(a, b, 2);
-        }
         
     private:
         shared_ptr<Hittable> left_;

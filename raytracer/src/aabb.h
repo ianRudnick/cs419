@@ -22,18 +22,21 @@ public:
      */
     AABB() {}
 
-    /* @return The minimum corner of the AABB. */
-    Point3 min() const { return min_; }
+    /** @return The minimum corner of the AABB. */
+    Point3 min() const {return min_;}
 
-    /* @return The maximum corner of the AABB. */
-    Point3 max() const { return max_; }
+    /** @return The maximum corner of the AABB. */
+    Point3 max() const {return max_;}
+
+    /** @return The center point of the AABB. */
+    Point3 centroid() const;
 
     /**
      * Constructs an AABB with the given parameters.
      * @param a The first corner of the box.
      * @param b The second (opposite) corner of the box.
      */
-    AABB(const Point3& a, const Point3& b) { min_ = a; max_ = b; }
+    AABB(const Point3& a, const Point3& b) {min_ = a; max_ = b;}
 
     /**
      * Determines whether a ray will hit the AABB.
