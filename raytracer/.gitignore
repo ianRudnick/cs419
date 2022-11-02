@@ -1,8 +1,8 @@
-renders/
+renders/*.png
 build/
 .vscode/
 
 *.o
 *.log
 
-renderer
+main
