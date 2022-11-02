@@ -31,8 +31,18 @@ const double pi = 3.1415926535897532385;
  * @param degrees The degree amount to convert.
  * @return The amount in radians.
  */
-inline double degToRad(double degrees) {
-    return degrees * pi / 180.0;
+inline double degToRad(double degrees) {return degrees * pi / 180.0;}
+
+/**
+ * Clamps a value to a range if it is outside of that range.
+ * @param x The value to clamp.
+ * @param min The minimum value to allow x to be.
+ * @param max The maximum value to allow x to be.
+ */
+inline double clamp(double x, double min, double max) {
+    if (x < min) return min;
+    if (x > max) return max;
+    return x;
 }
 
 /**
@@ -63,18 +73,6 @@ inline double randomDouble(double min, double max) {
  */
 inline int randomInt(int min, int max) {
     return static_cast<int>(randomDouble(min, max+1));
-}
-
-/**
- * Clamps a value to a range if it is outside of that range.
- * @param x The value to clamp.
- * @param min The minimum value to allow x to be.
- * @param max The maximum value to allow x to be.
- */
-inline double clamp(double x, double min, double max) {
-    if (x < min) return min;
-    if (x > max) return max;
-    return x;
 }
 
 } // namespace rudnick_rt

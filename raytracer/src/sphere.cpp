@@ -8,6 +8,8 @@
 #include "sphere.h"
 
 #include "aabb.h"
+#include "utils.h"
+#include "vec3.h"
 
 namespace rudnick_rt {
 

@@ -1,48 +1,76 @@
-# Makefile for Rudnick Raytracer
-# Based off some internet code and the CS225 makefile template
+# Makefile for 419 ray tracer project
+# Ian Rudnick
 
-CC=clang++
-WARNINGS = -pedantic -Wall -Werror -Wfatal-errors -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function
-CFLAGS=$(WARNINGS) -std=c++1y -stdlib=libc++ -O3 -g -c
+# Name of executable file
+TARGET   := main
 
-TARGET_EXEC ?= main
+# C++ compiler and linker to use
+CXX      := g++
+LD		 := g++
 
-BUILD_DIR ?= ./build
-SRC_DIRS ?= ./src
+# Compiler flags and linker flags
+CXXFLAGS += -Ofast
+CXXFLAGS += -pedantic -Wall -Werror -Wfatal-errors -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -std=c++11
+LDFLAGS	 +=
 
-SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c -or -name *.s)
-OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
-DEPS := $(OBJS:.o=.d)
+# Directories we need:
+SRC_DIR	 	 := src
+INC_DIR		 := include
+BUILD_DIR    := build
 
-INC_DIRS := $(shell find $(SRC_DIRS) -type d)
-INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+# Add a prefix to the include directory so compiler can find it
+INC_FLAGS := $(addprefix -I,$(INC_DIR))
+CXXFLAGS += $(INC_FLAGS) -MMD -MP
 
-CPPFLAGS ?= $(WARNINGS) $(INC_FLAGS) -Ofast -MMD -MP
+# Set up commands depending on the operating system
+ifeq ($(OS),Windows_NT)
+	CXXFLAGS += -D WIN32
+	FIX_PATH = $(subst /,\,$1)
+	RM_CMD = del /q
+	MKDIR_CMD = mkdir
+else
+	ifeq ($(shell uname), Linux)
+		RM_CMD = rm -f
+		MKDIR_CMD = mkdir -p
+		FIX_PATH = $1
+	endif
+endif
 
-$(TARGET_EXEC): $(OBJS)
-	$(CC) $(OBJS) -o $@ $(LDFLAGS)
+# Find all the C and C++ files to compile.
+SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*/*.cpp)
+INCS := $(wildcard $(INC_DIR)/*.h)
+OBJS := $(SRCS:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
-# assembly
-$(BUILD_DIR)/%.s.o: %.s
-	$(MKDIR_P) $(dir $@)
-	$(AS) $(ASFLAGS) -c $< -o $@
+# Make the list of dependencies from the list of objects.
+# Using string substitution (suffix version without %)
+DEPENDENCIES := $(OBJECTS:.o=.d)
 
-# c source
-$(BUILD_DIR)/%.c.o: %.c
-	$(MKDIR_P) $(dir $@)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+# Default. We want to make sure the directories are there, then follow the
+# instructions to build the executable.
+all: $(TARGET)
 
-# c++ source
-$(BUILD_DIR)/%.cpp.o: %.cpp
-	$(MKDIR_P) $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+# Rule to make the main executable
+# Prerequisites: must have the objects ready
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@ $(LDFLAGS)
 
+# Rule for C++ source
+$(OBJS): $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-.PHONY: clean
+# Include the .d Makefiles. The - suppresses the errors of missing Makefiles.
+include $(DEPENDENCIES)
 
+.PHONY: all clean info
+
+# Clear the build directory and the compiled executable
 clean:
-	$(RM) -r $(BUILD_DIR) $(TARGET_EXEC)
+	rm -f $(TARGET) $(BUILD_DIR)/*.o $(BUILD_DIR)/*.d $(BUILD_DIR)/*/*.o $(BUILD_DIR)/*/*.d
 
--include $(DEPS)
-
-MKDIR_P ?= mkdir -p
+info:
+	@echo "[*] Application dir: ${BIN_DIR}     "
+	@echo "[*] Object dir:      ${BUILD_DIR}   "
+	@echo "[*] Sources:         ${SRCS}        "
+	@echo "[*] Objects:         ${OBJS}        "
+	@echo "[*] Dependencies:    ${DEPENDENCIES}"

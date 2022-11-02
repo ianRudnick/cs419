@@ -8,6 +8,7 @@
  */
 #include <iostream>
 #include <cmath>
+#include <ctime>
 #include <string>
 
 #include "png.h"
@@ -217,23 +218,35 @@ int main() {
     std::cin >> render_name;
     std::cout << "Rendering " << render_name << ".png" << std::endl;
 
+    // Start a timer to time the rendering process.
+    std::clock_t start;
+    double duration;
+    start = std::clock();
+
     // Set up image
     const auto aspect_ratio = 16.0/9.0;
-    const int image_width = 1280;
+    const int image_width = 640;
     const int image_height = static_cast<int>(image_width / aspect_ratio);
-    const int samples_per_pixel = 400;  // MUST BE A SQUARE NUMBER
-    const int max_depth = 100;
+    const int samples_per_pixel = 100;  // MUST BE A SQUARE NUMBER
+    const int max_depth = 400;
     PNG *render = new PNG(image_width, image_height);
     RGBColor background(0.2, 0.8, 1.0);
 
     // Set up world
     // 1000 spheres = 32, 10,000 = 50, 100,000 = 159
-    HittableList world = areaLight();
+    HittableList world = cowApartment();
+
+    // Print performance info
+    std::cout << "Image dimensions: " << image_width << "x" << image_height << "\n";
+    std::cout << "Number of primitives: " << world.objects_.size() << "\n";
+    duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
+    std::cout << "Time to load scene: " << duration << " seconds\n";
 
     // Set up camera
-    //Point3 camera_pos = Point3(-8, 15, -5);
-    Point3 camera_pos = Point3(-8, 8, -8);
-    Point3 lookat = Point3(0.5, 0.5, 0);
+    //Point3 camera_pos = Point3(-8, 15, -5); // who knows what
+    Point3 camera_pos = Point3(-4, 2, -4); // cowApartment
+    //Point3 camera_pos = Point3(-3, 2, -3); // areaLight
+    Point3 lookat = Point3(0, 0.5, 0);
     Vec3 up(0, 1, 0);
     auto fov = 20.0;
     auto focal_distance = 10.0;
@@ -282,8 +295,10 @@ int main() {
 
     render->writeToFile("renders/" + render_name + ".png");
     delete render;
+    std::cout << "Image saved as renders/" << render_name << ".png\n";
+    duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
+    std::cout << "Total rendering time: " << duration << "\n";
 
-    std::cout << "\nDone!\n";
-
+    std::cout << "Done!\n";
     return 0;
 }
