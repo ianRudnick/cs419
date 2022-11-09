@@ -249,7 +249,7 @@ int main() {
     Point3 lookat = Point3(0, 0.5, 0);
     Vec3 up(0, 1, 0);
     auto fov = 20.0;
-    auto focal_distance = 10.0;
+    auto focal_distance = 5.0;
     auto aperture = 0.1;
     RRTenum projection = RRTenum::PERSPECTIVE;
     
